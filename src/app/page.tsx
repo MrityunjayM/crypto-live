@@ -1,95 +1,69 @@
-import Image from "next/image";
-import styles from "./page.module.css";
+"use client";
+import { useSelector, shallowEqual } from "react-redux";
+import { fetchCryptos, InitState } from "@/redux/features/cryptoSlice";
+import { RootState, useAppDispatch } from "@/redux/store";
+import { useEffect } from "react";
+import CryptoSelectModal from "@/components/CryptoSelectModal";
+import Placeholder from "@/components/Placeholder";
 
 export default function Home() {
+  const dispatch = useAppDispatch();
+  const { selected, cryptos, loading } = useSelector<RootState>(
+    (state) => state.crypto,
+    shallowEqual
+  ) as InitState;
+
+  useEffect(() => {
+    let intervalId = setInterval(() => dispatch(fetchCryptos(selected)), 3000);
+
+    return () => clearInterval(intervalId);
+  }, [selected]);
+
+  const tableRows = cryptos.map((c, i) => (
+    <tr key={c._id}>
+      <th scope="row">{i + 1}</th>
+      <td>
+        <img src={c.img_small} alt={c.name} width={20} />
+      </td>
+      <td>
+        {c.name} ({c.symbol})
+      </td>
+      <td>${c.price.toFixed(2)}</td>
+      <td>{new Date(c.createdAt).toLocaleString("en-IN")}</td>
+    </tr>
+  ));
+
+  if (loading && cryptos.length < 1) {
+    return <Placeholder />;
+  }
+
   return (
-    <main className={styles.main}>
-      <div className={styles.description}>
-        <p>
-          Get started by editing&nbsp;
-          <code className={styles.code}>src/app/page.tsx</code>
-        </p>
-        <div>
-          <a
-            href="https://vercel.com?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            By{" "}
-            <Image
-              src="/vercel.svg"
-              alt="Vercel Logo"
-              className={styles.vercelLogo}
-              width={100}
-              height={24}
-              priority
-            />
-          </a>
+    <>
+      <div className="alert alert-light" role="alert">
+        Price updates every 3 seconds. Click on button to change coin.
+      </div>
+      <CryptoSelectModal selected={selected} />
+      {!loading && cryptos.length > 0 ? (
+        <table className="table mt-2">
+          <thead>
+            <tr>
+              <th scope="col">#</th>
+              <th scope="col"></th>
+              <th scope="col">Name</th>
+              <th scope="col">Price</th>
+              <th scope="col">DateTime</th>
+            </tr>
+          </thead>
+          <tbody>{tableRows}</tbody>
+        </table>
+      ) : (
+        <div
+          className="d-flex justify-content-center align-items-center border border-1 mt-3"
+          style={{ minHeight: "175px", borderColor: "rgb(204 210 216)" }}
+        >
+          <p className="text-muted fs-4">No Data</p>
         </div>
-      </div>
-
-      <div className={styles.center}>
-        <Image
-          className={styles.logo}
-          src="/next.svg"
-          alt="Next.js Logo"
-          width={180}
-          height={37}
-          priority
-        />
-      </div>
-
-      <div className={styles.grid}>
-        <a
-          href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Docs <span>-&gt;</span>
-          </h2>
-          <p>Find in-depth information about Next.js features and API.</p>
-        </a>
-
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Learn <span>-&gt;</span>
-          </h2>
-          <p>Learn about Next.js in an interactive course with&nbsp;quizzes!</p>
-        </a>
-
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Templates <span>-&gt;</span>
-          </h2>
-          <p>Explore starter templates for Next.js.</p>
-        </a>
-
-        <a
-          href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Deploy <span>-&gt;</span>
-          </h2>
-          <p>
-            Instantly deploy your Next.js site to a shareable URL with Vercel.
-          </p>
-        </a>
-      </div>
-    </main>
+      )}
+    </>
   );
 }

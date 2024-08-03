@@ -1,0 +1,15 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - 3000:3000
+    environment:
+      - MONGO_URI=mongodb://mongo:27017/crypto
+      - COIN_GEKO_URL=https://api.coingecko.com/api/v3
+    depends_on:
+      - mongo
+    
+  mongo:
+    image: mongo
